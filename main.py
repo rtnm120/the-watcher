@@ -23,19 +23,17 @@ class Client(discord.Client):
 
     @tasks.loop(time=time)
     async def check_day(self):
-        weekday = datetime.date.weekday(datetime.date.today())
+        current_day = datetime.date.weekday(datetime.date.today())
 
-        if weekday == 3:
-            print("Starting run_check")
+        if current_day == 3:
             self.run_check.start()
 
     @tasks.loop(minutes=5)
     async def run_check(self):
-        print("Running check")
         channel = self.get_channel(channel_id)
+
         if check_status.check_status() == "online":
             await channel.send("Maintenance has finished.\nThaemine is back online")
-            print("Cancel run_check")
             self.run_check.cancel()
 
 client = Client()
