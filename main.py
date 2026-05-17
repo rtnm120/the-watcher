@@ -1,24 +1,29 @@
+import os
 import datetime
 import discord
-from discord.ext import tasks
-import os
+from discord.ext import tasks, commands
 from dotenv import load_dotenv
 import check_status
 
 load_dotenv()
 
-token = os.getenv("TOKEN")
+bot_token = os.getenv("BOT_TOKEN")
 channel_id = int(os.getenv("CHANNEL_ID"))
-time = datetime.time(hour=7, minute=5)
+guild_id = discord.Object(os.getenv("GUILD_ID"))
+role_id = f"<@&{os.getenv("ROLE_ID")}>"
 
-class Client(discord.Client):
+time = datetime.time(hour=7, minute=0)
+
+class Bot(commands.Bot):
     def __init__(self):
-        super().__init__(intents=discord.Intents.default())
-        self.synced = False
+        intents = discord.Intents.default()
+        intents.message_content = True
+        super().__init__(command_prefix="/", intents=intents)
 
     async def on_ready(self):
+        synced = await self.tree.sync(guild=guild_id)
+
         print(f"Logged on as {self.user}")
-        self.do_run_check = False
         self.check_day.start()
 
     @tasks.loop(time=time)
@@ -33,8 +38,14 @@ class Client(discord.Client):
         channel = self.get_channel(channel_id)
 
         if check_status.check_status() == "online":
-            await channel.send("Maintenance has finished.\nThaemine is back online")
+            await channel.send(f"{role_id}\nMaintenance has concluded\nThaemine is now online")
             self.run_check.cancel()
 
-client = Client()
-client.run(token)
+bot = Bot()
+
+@bot.tree.command(name="monitor", description="Monitor server status during emergency maintenance", guild=guild_id)
+async def test(interaction: discord.Interaction):
+    await interaction.response.send_message("Now monitoring server status", ephemeral=True)
+    bot.run_check.start()
+
+bot.run(bot_token)
