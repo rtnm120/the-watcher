@@ -1,7 +1,7 @@
 [project]
-name = "status"
+name = "the_watcher"
 version = "0.1.0"
-description = "Add your description here"
+description = "A simple discord bot that notifies users when Lost Ark server maintenance has concluded"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
